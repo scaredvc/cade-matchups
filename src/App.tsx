@@ -6,6 +6,7 @@ import RankedList from "./RankedList";
 import TopBars from "./TopBars";
 import Scatter from "./Scatter";
 import MatchupTable from "./MatchupTable";
+import DancingCade from "./DancingCade";
 
 type Load = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: MatchupData };
 
@@ -48,20 +49,23 @@ export default function App() {
   return (
     <main className="shell">
       <header className="masthead">
-        <p className="kicker">
-          <span className="dot" aria-hidden /> Detroit Pistons · #2 · {data.season} {data.seasonType}
-        </p>
-        <h1>
-          Cade <span className="vs">vs.</span> every defender
-        </h1>
-        <p className="lede">
-          Across <b>{season.defenders}</b> defenders NBA.com's tracking has credited with guarding him this season,
-          Cunningham is shooting <b>{fmtPct(pct(season.fgm, season.fga), "%")}</b> (<b>{season.fgm}</b>-for-
-          <b>{season.fga}</b>), with <b>{season.ast}</b> assists against <b>{season.tov}</b> turnovers on these matchups.
-        </p>
-        <p className="stamp">
-          Updated <time dateTime={data.updatedAt}>{updated}</time> · refreshed daily from NBA.com
-        </p>
+        <div className="masthead-text">
+          <p className="kicker">
+            <span className="dot" aria-hidden /> Detroit Pistons · #2 · {data.season} {data.seasonType}
+          </p>
+          <h1>
+            Cade <span className="vs">vs.</span> every defender
+          </h1>
+          <p className="lede">
+            Across <b>{season.defenders}</b> defenders NBA.com's tracking has credited with guarding him this season,
+            Cunningham is shooting <b>{fmtPct(pct(season.fgm, season.fga), "%")}</b> (<b>{season.fgm}</b>-for-
+            <b>{season.fga}</b>), with <b>{season.ast}</b> assists against <b>{season.tov}</b> turnovers on these matchups.
+          </p>
+          <p className="stamp">
+            Updated <time dateTime={data.updatedAt}>{updated}</time> · refreshed daily from NBA.com
+          </p>
+        </div>
+        <DancingCade />
       </header>
 
       <section className="strip reveal" aria-label="Season totals across all defenders">
