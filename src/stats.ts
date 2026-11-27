@@ -113,6 +113,123 @@ export function extremes(rows: MatchupRow[], minPoss = EXTREME_MIN_POSS, minFga 
   };
 }
 
+/** Rate titles (per possession) need this many partial possessions to count. */
+export const RATE_MIN_POSS = 10;
+/** Shot-mix titles (2s vs 3s) need this many of Cade's shots. */
+export const SHOT_MIX_MIN_FGA = 6;
+
+export interface Superlative {
+  id: string;
+  title: string;
+  /** How the title is decided, shown under it. */
+  rule: string;
+  tone?: "good" | "bad";
+  row: MatchupRow;
+  stat: string;
+}
+
+interface SuperlativeRule {
+  id: string;
+  title: string;
+  rule: string;
+  tone?: "good" | "bad";
+  eligible: (r: MatchupRow) => boolean;
+  /** Higher wins. Ties go to the defender who guarded Cade more. */
+  score: (r: MatchupRow) => number;
+  stat: (r: MatchupRow) => string;
+}
+
+const perPoss = (n: number, r: MatchupRow) => n / r.poss;
+const enoughPoss = (r: MatchupRow) => r.poss >= RATE_MIN_POSS;
+const enoughShots = (r: MatchupRow) => r.fga >= SHOT_MIX_MIN_FGA;
+const twos = (r: MatchupRow) => r.fga - r.fg3a;
+const detPpp = (r: MatchupRow) => r.teamPts / r.poss;
+
+const SUPERLATIVE_RULES: SuperlativeRule[] = [
+  {
+    id: "cooked",
+    title: "Cooked the most",
+    rule: "Most Cade points",
+    tone: "good",
+    eligible: () => true,
+    score: (r) => r.pts,
+    stat: (r) => `${r.pts} pts on ${r.poss.toFixed(1)} poss.`,
+  },
+  {
+    id: "inside",
+    title: "Took it inside",
+    rule: `Highest share of 2s · ${SHOT_MIX_MIN_FGA}+ shots`,
+    eligible: enoughShots,
+    score: (r) => twos(r) / r.fga,
+    stat: (r) => `${twos(r)} of ${r.fga} shots were 2s (${r.fgm - r.fg3m}/${twos(r)} made)`,
+  },
+  {
+    id: "deep",
+    title: "Let it fly",
+    rule: `Highest share of 3s · ${SHOT_MIX_MIN_FGA}+ shots`,
+    eligible: enoughShots,
+    score: (r) => r.fg3a / r.fga,
+    stat: (r) => `${r.fg3a} of ${r.fga} shots were 3s (${r.fg3m}/${r.fg3a} made)`,
+  },
+  {
+    id: "table",
+    title: "Set the table",
+    rule: `Most assists per poss. · ${RATE_MIN_POSS}+ poss.`,
+    tone: "good",
+    eligible: enoughPoss,
+    score: (r) => perPoss(r.ast, r),
+    stat: (r) => `${r.ast} assists on ${r.poss.toFixed(1)} poss.`,
+  },
+  {
+    id: "line",
+    title: "Got to the line",
+    rule: `Most free throws per poss. · ${RATE_MIN_POSS}+ poss.`,
+    tone: "good",
+    eligible: (r) => enoughPoss(r) && r.fta >= 2,
+    score: (r) => perPoss(r.fta, r),
+    stat: (r) => `${r.ftm}/${r.fta} FT, ${r.sfl} shooting fouls drawn`,
+  },
+  {
+    id: "hawk",
+    title: "Ball hawk",
+    rule: `Most Cade turnovers per poss. · ${RATE_MIN_POSS}+ poss.`,
+    tone: "bad",
+    eligible: (r) => enoughPoss(r) && r.tov >= 2,
+    score: (r) => perPoss(r.tov, r),
+    stat: (r) => `${r.tov} turnovers on ${r.poss.toFixed(1)} poss.`,
+  },
+  {
+    id: "feast",
+    title: "Detroit feasted",
+    rule: `Best Detroit pts/poss · ${RATE_MIN_POSS}+ poss.`,
+    tone: "good",
+    eligible: enoughPoss,
+    score: detPpp,
+    stat: (r) => `${detPpp(r).toFixed(2)} pts/poss (${r.teamPts} on ${r.poss.toFixed(1)})`,
+  },
+  {
+    id: "shutdown",
+    title: "Shut it down",
+    rule: `Worst Detroit pts/poss · ${RATE_MIN_POSS}+ poss.`,
+    tone: "bad",
+    eligible: enoughPoss,
+    score: (r) => -detPpp(r),
+    stat: (r) => `${detPpp(r).toFixed(2)} pts/poss (${r.teamPts} on ${r.poss.toFixed(1)})`,
+  },
+];
+
+/** One title per category, awarded to the defender who leads it. Categories nobody qualifies for are skipped. */
+export function superlatives(rows: MatchupRow[]): Superlative[] {
+  return SUPERLATIVE_RULES.flatMap((rule) => {
+    const leader = rows
+      .filter(rule.eligible)
+      .sort((a, b) => rule.score(b) - rule.score(a) || b.poss - a.poss)[0];
+    return leader
+      ? [{ id: rule.id, title: rule.title, rule: rule.rule, tone: rule.tone, row: leader, stat: rule.stat(leader) }]
+      : [];
+  });
+}
+
 export type SortKey =
   | "defName" | "gp" | "seconds" | "poss" | "pts" | "per100" | "fgPct" | "fg3Pct" | "ftm" | "ast" | "tov" | "blk";
 

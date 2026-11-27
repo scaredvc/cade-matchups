@@ -1,6 +1,6 @@
 // Run: node src/stats.test.ts  (Node 22.18+ strips the types)
 import assert from "node:assert/strict";
-import { extremes, rankLines, summarize, toLine } from "./stats.ts";
+import { extremes, rankLines, summarize, superlatives, toLine } from "./stats.ts";
 import type { MatchupRow } from "./types.ts";
 
 const row = (defId: number, poss: number, o: Partial<MatchupRow> = {}): MatchupRow => ({
@@ -37,5 +37,28 @@ const lines = rows.slice(0, 4).map(toLine);
 assert.deepEqual(rankLines(lines, "poss").map((l) => l.row.defId), [3, 1, 2, 4]);
 // net: D4 0-for-4 = -4, D1 1-for-5 = -3, D3 no shots = 0, D2 4-for-5 = +3
 assert.deepEqual(rankLines(lines, "netAsc").map((l) => l.row.defId), [4, 1, 3, 2]);
+
+// Superlatives: each title goes to the category leader among eligible defenders.
+const sup = superlatives([
+  row(10, 30, { pts: 9, fga: 8, fg3a: 1, fgm: 4, ast: 2, fta: 2, teamPts: 30 }), // 7/8 shots are 2s
+  row(11, 12, { pts: 6, fga: 6, fg3a: 5, fg3m: 2, fgm: 2, ast: 6, tov: 3, teamPts: 6 }), // 3s, assists, TOs
+  row(12, 4, { pts: 20, fga: 9, fg3a: 0, fgm: 9, fta: 9, teamPts: 25 }), // most points, but too few poss. for rates
+]);
+const byId = Object.fromEntries(sup.map((s) => [s.id, s.row.defId]));
+assert.equal(byId.cooked, 12, "total points has no possession floor");
+assert.equal(byId.inside, 12, "9/9 twos beats 7/8");
+assert.equal(byId.deep, 11);
+assert.equal(byId.table, 11);
+assert.equal(byId.line, 10, "defender 12 has the FT rate but only 4 poss.");
+assert.equal(byId.hawk, 11);
+assert.equal(byId.feast, 10, "1.00 pts/poss beats 0.50");
+assert.equal(byId.shutdown, 11);
+assert.equal(sup.find((s) => s.id === "inside")?.stat, "9 of 9 shots were 2s (9/9 made)");
+assert.deepEqual(superlatives([]), [], "no rows, no titles");
+assert.deepEqual(
+  superlatives([row(20, 3, { pts: 2 })]).map((s) => s.id),
+  ["cooked"],
+  "categories nobody qualifies for are skipped",
+);
 
 console.log("ok");

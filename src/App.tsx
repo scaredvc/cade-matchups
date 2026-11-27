@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MatchupData, MatchupRow } from "./types";
-import { EXTREME_MIN_FGA, EXTREME_MIN_POSS, RANK_SORTS, extremes, fmtPct, pct, summarize, type RankSort } from "./stats";
+import { EXTREME_MIN_FGA, EXTREME_MIN_POSS, RANK_SORTS, RATE_MIN_POSS, SHOT_MIX_MIN_FGA, extremes, fmtPct, pct, summarize, type RankSort } from "./stats";
 import Face from "./Face";
 import RankedList from "./RankedList";
 import TopBars from "./TopBars";
 import Scatter from "./Scatter";
 import MatchupTable from "./MatchupTable";
 import DancingCade from "./DancingCade";
+import Superlatives from "./Superlatives";
 
 type Load = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: MatchupData };
 
@@ -81,6 +82,16 @@ export default function App() {
         <Callout tone="bad" label={`Toughest coverage (${EXTREME_MIN_POSS}+ poss., ${EXTREME_MIN_FGA}+ FGA)`} row={ex.toughest} />
         <Callout tone="good" label={`Favorite target (${EXTREME_MIN_POSS}+ poss., ${EXTREME_MIN_FGA}+ FGA)`} row={ex.favorite} />
         <Callout label="Most-seen defender" row={ex.mostSeen} possOnly />
+      </section>
+
+      <section className="section reveal" aria-labelledby="supers-h">
+        <h2 id="supers-h">Superlatives</h2>
+        <p className="note">
+          One title per category, to the defender who led it. Rates need {RATE_MIN_POSS}+ partial possessions and shot
+          mix needs {SHOT_MIX_MIN_FGA}+ shots, so a single possession can't win a title. "Inside" means 2-pointers: rim
+          attacks and midrange both count, because this data doesn't say where a shot came from or whether it was an iso.
+        </p>
+        <Superlatives rows={rows} />
       </section>
 
       <section className="section reveal" aria-labelledby="ranked-h">

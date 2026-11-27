@@ -126,6 +126,9 @@ h1 {
 .callout-body { display: flex; align-items: center; gap: 12px; }
 .callout-name { font: 800 24px/1 var(--display); text-transform: uppercase; }
 .callout-stat { font: 12px var(--mono); color: var(--muted); margin-top: 4px; }
+.callout-rule { font: 10px var(--mono); color: var(--muted); opacity: 0.8; margin-top: auto; }
+.supers { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.supers .callout-name { font-size: 21px; }
 
 /* Faces */
 .face {
