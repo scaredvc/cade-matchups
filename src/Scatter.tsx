@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import type { MatchupRow } from "./types";
 import { per100 } from "./stats";
+import { useWidth } from "./useWidth";
 
 interface Props {
   rows: MatchupRow[];
@@ -18,41 +18,32 @@ function niceMax(value: number, step: number): number {
 }
 
 export default function Scatter({ rows, baseline, activeId, onActive }: Props) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(900);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) => entry && setWidth(entry.contentRect.width));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
+  const [ref, width] = useWidth<HTMLDivElement>();
   const height = width < 560 ? 320 : 400;
   const xMax = niceMax(Math.max(0, ...rows.map((r) => r.poss)), 10);
   const yMax = niceMax(Math.max(baseline, ...rows.map((r) => per100(r.pts, r.poss))), 25);
   const x = (v: number) => PAD.left + (v / xMax) * (width - PAD.left - PAD.right);
   const y = (v: number) => height - PAD.bottom - (v / yMax) * (height - PAD.top - PAD.bottom);
-  const xTicks = Array.from({ length: xMax / 10 + 1 }, (_, i) => i * 10).filter((t, _, all) => all.length <= 8 || t % 20 === 0);
-  const yTicks = Array.from({ length: yMax / 25 + 1 }, (_, i) => i * 25);
+  const xStep = xMax > 80 ? 20 : 10;
+  const yStep = yMax > 200 ? 50 : 25;
+  const xTicks = Array.from({ length: Math.floor(xMax / xStep) + 1 }, (_, i) => i * xStep);
+  const yTicks = Array.from({ length: Math.floor(yMax / yStep) + 1 }, (_, i) => i * yStep);
   const labelled = new Set([...rows].sort((a, b) => b.poss - a.poss).slice(0, LABEL_COUNT).map((r) => r.defId));
   const active = rows.find((r) => r.defId === activeId) ?? null;
 
   return (
-    <section className="chart" aria-label="Scatter plot of possessions against Cade's points per 100 possessions">
-      <div className="chart-head">
-        <h2>Volume vs. damage</h2>
-        <p>
-          Right means the defender saw Cade more. Up means Cade scored more efficiently.{" "}
-          <span className="legend-hot">Red</span> dots are above his season rate of {baseline.toFixed(1)}.
-        </p>
-      </div>
-      <div ref={wrapRef} className="chart-frame">
+    <div className="panel">
+      <div ref={ref} className="chart-frame">
         {rows.length === 0 ? (
           <p className="empty">No defenders match these filters.</p>
         ) : (
-          <svg width={width} height={height} role="img" onMouseLeave={() => onActive(null)}>
+          <svg
+            width={width}
+            height={height}
+            role="img"
+            aria-label="Scatter plot of possessions against Cade's points per 100 possessions"
+            onMouseLeave={() => onActive(null)}
+          >
             {yTicks.map((t) => (
               <g key={`y${t}`}>
                 <line className="grid" x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} />
@@ -78,12 +69,11 @@ export default function Scatter({ rows, baseline, activeId, onActive }: Props) {
             </text>
             {rows.map((r) => {
               const rate = per100(r.pts, r.poss);
-              const hot = rate > baseline;
               const isActive = r.defId === activeId;
               return (
                 <g
                   key={r.defId}
-                  className={`pt${hot ? " hot" : ""}${isActive ? " active" : ""}`}
+                  className={`pt${rate > baseline ? " hot" : ""}${isActive ? " active" : ""}`}
                   onMouseEnter={() => onActive(r.defId)}
                   onFocus={() => onActive(r.defId)}
                   onBlur={() => onActive(null)}
@@ -110,7 +100,9 @@ export default function Scatter({ rows, baseline, activeId, onActive }: Props) {
             }}
           >
             <strong>{active.defName}</strong>
-            <span>{active.team ?? "—"} · {active.gp} GP</span>
+            <span>
+              {active.team ?? "—"} · {active.gp} GP
+            </span>
             <span>
               {active.pts} pts on {active.poss.toFixed(1)} poss · {per100(active.pts, active.poss).toFixed(0)} / 100
             </span>
@@ -120,6 +112,6 @@ export default function Scatter({ rows, baseline, activeId, onActive }: Props) {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

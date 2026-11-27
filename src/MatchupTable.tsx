@@ -14,12 +14,14 @@ const COLUMNS: { key: SortKey; label: string; title: string; numeric: boolean }[
   { key: "gp", label: "GP", title: "Games with a matchup", numeric: true },
   { key: "seconds", label: "Time", title: "Matchup time (min:sec)", numeric: true },
   { key: "poss", label: "Poss", title: "Partial possessions", numeric: true },
-  { key: "pts", label: "Pts", title: "Cade's points", numeric: true },
+  { key: "pts", label: "Pts", title: "Cade's points (scored)", numeric: true },
   { key: "per100", label: "Pts/100", title: "Cade's points per 100 partial possessions", numeric: true },
   { key: "fgPct", label: "FG", title: "Field goals made/attempted and FG%", numeric: true },
   { key: "fg3Pct", label: "3P", title: "Threes made/attempted and 3P%", numeric: true },
-  { key: "ast", label: "Ast", title: "Assists", numeric: true },
+  { key: "ftm", label: "FT", title: "Free throws made/attempted", numeric: true },
+  { key: "ast", label: "Ast", title: "Assists (passed)", numeric: true },
   { key: "tov", label: "Tov", title: "Turnovers", numeric: true },
+  { key: "blk", label: "Blk", title: "Cade's shots blocked by this defender", numeric: true },
 ];
 
 export default function MatchupTable({ rows, baseline, activeId, onActive }: Props) {
@@ -39,7 +41,7 @@ export default function MatchupTable({ rows, baseline, activeId, onActive }: Pro
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: key !== "defName" }));
 
   return (
-    <section className="table-wrap" aria-label="All defenders">
+    <div className="table-wrap">
       <table>
         <thead>
           <tr>
@@ -60,6 +62,13 @@ export default function MatchupTable({ rows, baseline, activeId, onActive }: Pro
           </tr>
         </thead>
         <tbody>
+          {sorted.length === 0 && (
+            <tr>
+              <td colSpan={COLUMNS.length} className="empty-row">
+                No defenders match this filter.
+              </td>
+            </tr>
+          )}
           {sorted.map((r) => {
             const rate = per100(r.pts, r.poss);
             return (
@@ -79,18 +88,22 @@ export default function MatchupTable({ rows, baseline, activeId, onActive }: Pro
                 <td className="num">{r.pts}</td>
                 <td className={`num rate${rate > baseline ? " hot" : ""}`}>{rate.toFixed(0)}</td>
                 <td className="num">
-                  {r.fgm}/{r.fga} <span className="pct">{fmtPct(pct(r.fgm, r.fga))}</span>
+                  {r.fgm}-{r.fga} <span className="pct">{fmtPct(pct(r.fgm, r.fga))}</span>
                 </td>
                 <td className="num">
-                  {r.fg3m}/{r.fg3a} <span className="pct">{fmtPct(pct(r.fg3m, r.fg3a))}</span>
+                  {r.fg3m}-{r.fg3a} <span className="pct">{fmtPct(pct(r.fg3m, r.fg3a))}</span>
+                </td>
+                <td className="num">
+                  {r.ftm}-{r.fta}
                 </td>
                 <td className="num">{r.ast}</td>
                 <td className="num">{r.tov}</td>
+                <td className="num">{r.blk}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-    </section>
+    </div>
   );
 }

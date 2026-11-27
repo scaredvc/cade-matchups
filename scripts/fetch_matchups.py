@@ -115,6 +115,32 @@ def write_atomic(payload: dict, path: Path) -> None:
     os.replace(tmp, path)
 
 
+HEADSHOT_URL = "https://cdn.nba.com/headshots/nba/latest/260x190/{}.png"
+HEADSHOT_DIR = OUT_PATH.parent.parent / "headshots"
+
+
+def download_headshots(player_ids: list[int], folder: Path = HEADSHOT_DIR) -> int:
+    """Save missing defender headshots next to the site. Cosmetic: failures are skipped."""
+    import urllib.request
+
+    folder.mkdir(parents=True, exist_ok=True)
+    saved = 0
+    for pid in player_ids:
+        target = folder / f"{pid}.png"
+        if target.exists():
+            continue
+        try:
+            req = urllib.request.Request(HEADSHOT_URL.format(pid), headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+            if data[:8] == b"\x89PNG\r\n\x1a\n":
+                target.write_bytes(data)
+                saved += 1
+        except Exception as exc:
+            print(f"warning: headshot {pid} skipped ({exc})", file=sys.stderr)
+    return saved
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--season", default=current_season(date.today()))
@@ -140,6 +166,9 @@ def main() -> int:
     }
     write_atomic(payload, args.out)
     print(f"wrote {len(rows)} defenders for {args.season} to {args.out}")
+    new_faces = download_headshots([r["defId"] for r in rows])
+    if new_faces:
+        print(f"saved {new_faces} new headshots")
     return 0
 
 

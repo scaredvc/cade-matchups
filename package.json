@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "fetch-data": "uv run scripts/fetch_matchups.py"
+    "fetch-data": "uv run scripts/fetch_matchups.py",
+    "test": "node src/stats.test.ts && cd scripts && uv run --quiet --with nba_api python test_fetch_matchups.py"
   },
   "dependencies": {
     "react": "^19.3.1",
