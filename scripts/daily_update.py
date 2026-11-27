@@ -1,7 +1,7 @@
 """Daily refresh: fetch new matchup data, then commit and push it so GitHub Pages redeploys.
 
-Run by Windows Task Scheduler (task "Cade Matchups Daily"). Manual run:
-    uv run --no-project python scripts/daily_update.py
+Run by Windows Task Scheduler (task "Cade Matchups Daily", 9:00 AM via pythonw). Manual run:
+    python scripts/daily_update.py
 
 Logs to logs/daily_update.log. Exits non-zero on failure; the site keeps the last good data.
 """
@@ -30,7 +30,9 @@ def log(msg: str) -> None:
 
 
 def run(*cmd: str) -> subprocess.CompletedProcess[str]:
-    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600)
+    # No console windows flashing up when Task Scheduler runs this via pythonw.
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600, creationflags=flags)
     output = (result.stdout + result.stderr).strip()
     if output:
         log(f"  {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}: {output[-800:]}")
