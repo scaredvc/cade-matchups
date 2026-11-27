@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.tmp
 __pycache__/
+logs/

@@ -10,7 +10,7 @@ Static Vite + React + TypeScript site. The page reads `public/data/cade-matchups
 
 ```
 Task Scheduler (this PC, daily)
-  └─ scripts/daily_update.sh
+  └─ scripts/daily_update.py
        ├─ uv run scripts/fetch_matchups.py   → public/data/cade-matchups.json, public/headshots/*.png
        └─ git commit + push (only if the data changed)
             └─ GitHub Actions: test, build, deploy to Pages
