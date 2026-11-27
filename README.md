@@ -22,7 +22,7 @@ The fetch runs on a home machine because **stats.nba.com does not answer request
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173/cade-matchups/
+npm run dev          # http://localhost:5173
 npm test             # stats helpers + fetch transform
 npm run build        # typecheck + production build into dist/
 ```

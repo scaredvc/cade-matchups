@@ -3,3 +3,6 @@ dist/
 *.tmp
 __pycache__/
 logs/
+
+.vercel
+.env*
