@@ -1,8 +1,11 @@
 """Run: uv run --with nba_api python scripts/test_fetch_matchups.py"""
 
+import json
+import tempfile
 from datetime import date
+from pathlib import Path
 
-from fetch_matchups import CADE_ID, current_season, to_rows
+from fetch_matchups import CADE_ID, current_season, is_unchanged, to_rows
 
 
 def record(def_id, name, poss, **overrides):
@@ -37,5 +40,15 @@ for bad in ([record(3, "Wrong", 1.0, OFF_PLAYER_ID=999)], [{"OFF_PLAYER_ID": CAD
         pass
     else:
         raise AssertionError("bad input should raise")
+
+with tempfile.TemporaryDirectory() as tmp:
+    saved = Path(tmp) / "data.json"
+    assert not is_unchanged(saved, "2026-27", rows), "missing file counts as changed"
+    saved.write_text(json.dumps({"season": "2026-27", "updatedAt": "x", "rows": rows}), encoding="utf-8")
+    assert is_unchanged(saved, "2026-27", rows), "same rows: leave the file (and updatedAt) alone"
+    assert not is_unchanged(saved, "2027-28", rows), "new season is a change"
+    assert not is_unchanged(saved, "2026-27", rows[:1]), "different rows are a change"
+    saved.write_text("{not json", encoding="utf-8")
+    assert not is_unchanged(saved, "2026-27", rows), "corrupt file gets rewritten"
 
 print("ok")

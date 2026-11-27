@@ -12,6 +12,8 @@ import Superlatives from "./Superlatives";
 type Load = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: MatchupData };
 
 const DATA_URL = `${import.meta.env.BASE_URL}data/cade-matchups.json`;
+/** Every data refresh is a commit to this file, so its history is the update log. */
+const HISTORY_URL = "https://github.com/scaredvc/cade-matchups/commits/main/public/data/cade-matchups.json";
 
 export default function App() {
   const [load, setLoad] = useState<Load>({ status: "loading" });
@@ -63,7 +65,10 @@ export default function App() {
             <b>{season.fga}</b>), with <b>{season.ast}</b> assists against <b>{season.tov}</b> turnovers on these matchups.
           </p>
           <p className="stamp">
-            Updated <time dateTime={data.updatedAt}>{updated}</time> · refreshed daily from NBA.com
+            Stats last changed <time dateTime={data.updatedAt}>{updated}</time> · checked daily at 9 AM PT ·{" "}
+            <a href={HISTORY_URL} target="_blank" rel="noopener noreferrer">
+              update history
+            </a>
           </p>
         </div>
         <DancingCade />

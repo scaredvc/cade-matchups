@@ -1,7 +1,14 @@
-"""Daily refresh: fetch new matchup data, then commit and push it so GitHub Pages redeploys.
+"""Daily refresh: fetch new matchup data, then commit and push it so both hosts redeploy.
 
 Run by Windows Task Scheduler (task "Cade Matchups Daily", 9:00 AM via pythonw). Manual run:
     python scripts/daily_update.py
+
+Each run:
+  1. refuses to run unless `main` is checked out, so data never lands on a feature branch;
+  2. fast-forwards to GitHub's main, so code pushed from another machine doesn't block the push;
+  3. fetches; the data file only changes when the stats changed (no game, no commit);
+  4. commits only the data paths, never anything else that happens to be staged;
+  5. pushes whenever local main is ahead, which also retries a push that failed on an earlier day.
 
 Logs to logs/daily_update.log. Exits non-zero on failure; the site keeps the last good data.
 """
@@ -17,7 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LOG = ROOT / "logs" / "daily_update.log"
 DATA_PATHS = ["public/data/cade-matchups.json", "public/headshots"]
-# gh supplies the GitHub token, so the push never stops at a credential prompt.
+# gh supplies the GitHub token, so fetch/push never stop at a credential prompt.
 GIT_AUTH = ["-c", "credential.helper=", "-c", "credential.helper=!gh auth git-credential"]
 
 
@@ -29,14 +36,18 @@ def log(msg: str) -> None:
         f.write(line + "\n")
 
 
-def run(*cmd: str) -> subprocess.CompletedProcess[str]:
+def run(label: str, *cmd: str) -> subprocess.CompletedProcess[str]:
     # No console windows flashing up when Task Scheduler runs this via pythonw.
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
     result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600, creationflags=flags)
     output = (result.stdout + result.stderr).strip()
     if output:
-        log(f"  {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}: {output[-800:]}")
+        log(f"  {label}: {output[-800:]}")
     return result
+
+
+def git(label: str, *args: str) -> subprocess.CompletedProcess[str]:
+    return run(label, "git", *args)
 
 
 def main() -> int:
@@ -46,23 +57,38 @@ def main() -> int:
         log("error: uv, git and gh must all be on PATH")
         return 1
 
-    if run(uv, "run", "scripts/fetch_matchups.py").returncode != 0:
-        log("fetch failed; nothing pushed")
+    branch = git("branch", "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    if branch != "main":
+        log(f"skipped: '{branch}' is checked out; the daily update only commits on main")
         return 1
 
-    run("git", "add", "--", *DATA_PATHS)
-    if run("git", "diff", "--cached", "--quiet").returncode == 0:
-        log("no data changes; done")
+    if git("fetch", *GIT_AUTH, "fetch", "origin", "main").returncode == 0:
+        if git("sync", "merge", "--ff-only", "origin/main").returncode != 0:
+            log("warning: local main has diverged from GitHub; push will likely fail until it's reconciled")
+    else:
+        log("warning: could not reach GitHub to sync; continuing")
+
+    if run("fetch-data", uv, "run", "scripts/fetch_matchups.py").returncode != 0:
+        log("fetch failed; site keeps the last good data")
+        return 1
+
+    git("stage", "add", "--", *DATA_PATHS)
+    if git("diff", "diff", "--cached", "--quiet", "--", *DATA_PATHS).returncode != 0:
+        stamp = datetime.now().strftime("%Y-%m-%d")
+        if git("commit", "commit", "-m", f"data: daily matchup refresh {stamp}", "--", *DATA_PATHS).returncode != 0:
+            log("commit failed")
+            return 1
+    else:
+        log("no new stats today")
+
+    ahead = git("ahead", "rev-list", "--count", "origin/main..main").stdout.strip()
+    if ahead in ("", "0"):
+        log("done; nothing to push")
         return 0
-
-    stamp = datetime.now().strftime("%Y-%m-%d")
-    if run("git", "commit", "-m", f"data: daily matchup refresh {stamp}").returncode != 0:
-        log("commit failed")
+    if git("push", *GIT_AUTH, "push", "origin", "main").returncode != 0:
+        log(f"push failed; {ahead} commit(s) kept locally and retried on the next run")
         return 1
-    if run("git", *GIT_AUTH, "push", "origin", "main").returncode != 0:
-        log("push failed; commit kept locally and will go out with the next successful run")
-        return 1
-    log("pushed; GitHub Pages will redeploy")
+    log(f"pushed {ahead} commit(s); Vercel and GitHub Pages will redeploy")
     return 0
 
 

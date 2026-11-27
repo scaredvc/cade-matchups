@@ -7,7 +7,9 @@
 Run: uv run scripts/fetch_matchups.py [--season 2026-27]
 
 The output file is only replaced after the new data passes validation, so a failed
-or empty fetch leaves the last good dataset in place.
+or empty fetch leaves the last good dataset in place. It is also left alone when the
+stats are identical to what's saved, so `updatedAt` means "the numbers last changed"
+and days without a Pistons game produce no commit.
 """
 
 from __future__ import annotations
@@ -115,6 +117,15 @@ def write_atomic(payload: dict, path: Path) -> None:
     os.replace(tmp, path)
 
 
+def is_unchanged(path: Path, season: str, rows: list[dict]) -> bool:
+    """True when the saved file already holds exactly these rows for this season."""
+    try:
+        saved = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return saved.get("season") == season and saved.get("rows") == rows
+
+
 HEADSHOT_URL = "https://cdn.nba.com/headshots/nba/latest/260x190/{}.png"
 HEADSHOT_DIR = OUT_PATH.parent.parent / "headshots"
 
@@ -156,16 +167,19 @@ def main() -> int:
         print(f"error: fetch failed, keeping existing data: {exc}", file=sys.stderr)
         return 1
 
-    payload = {
-        "player": {"id": CADE_ID, "name": CADE_NAME},
-        "season": args.season,
-        "seasonType": "Regular Season",
-        "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "source": "NBA.com matchup tracking via nba_api (LeagueSeasonMatchups)",
-        "rows": rows,
-    }
-    write_atomic(payload, args.out)
-    print(f"wrote {len(rows)} defenders for {args.season} to {args.out}")
+    if is_unchanged(args.out, args.season, rows):
+        print(f"unchanged: {len(rows)} defenders for {args.season}, same as saved data")
+    else:
+        payload = {
+            "player": {"id": CADE_ID, "name": CADE_NAME},
+            "season": args.season,
+            "seasonType": "Regular Season",
+            "updatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "source": "NBA.com matchup tracking via nba_api (LeagueSeasonMatchups)",
+            "rows": rows,
+        }
+        write_atomic(payload, args.out)
+        print(f"wrote {len(rows)} defenders for {args.season} to {args.out}")
     new_faces = download_headshots([r["defId"] for r in rows])
     if new_faces:
         print(f"saved {new_faces} new headshots")
