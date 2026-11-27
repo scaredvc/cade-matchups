@@ -41,7 +41,7 @@ export default function MatchupTable({ rows, baseline, activeId, onActive }: Pro
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: key !== "defName" }));
 
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0} role="region" aria-label="Scrollable matchup table">
       <table>
         <thead>
           <tr>

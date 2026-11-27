@@ -24,7 +24,7 @@ export default function RankedList({ rows, teamPpp, sort }: Props) {
         <span>DET pts/poss</span>
         <span>Scored · Passed · TO</span>
       </div>
-      <ol className="rank-list">
+      <ol className="rank-list" tabIndex={0} aria-label="Scrollable defender rankings">
         {lines.length === 0 && <li className="rank-empty">No defender guarded him that much. Lower the minimum.</li>}
         {lines.map(({ row: r, good, bad, net, teamPpp: ppp }, i) => (
           <li key={r.defId} className="rank-row">

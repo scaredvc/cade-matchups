@@ -70,11 +70,11 @@ export function toLine(row: MatchupRow): DefenderLine {
 export type RankSort = "poss" | "netAsc" | "netDesc" | "teamAsc" | "teamDesc";
 
 export const RANK_SORTS: { value: RankSort; label: string }[] = [
-  { value: "poss", label: "Most guarded first" },
-  { value: "netAsc", label: "Most disruptive defenders" },
-  { value: "netDesc", label: "Cade won the most plays" },
-  { value: "teamAsc", label: "Worst Detroit offense" },
-  { value: "teamDesc", label: "Best Detroit offense" },
+  { value: "poss", label: "Most partial possessions" },
+  { value: "netAsc", label: "Lowest net plays" },
+  { value: "netDesc", label: "Highest net plays" },
+  { value: "teamAsc", label: "Lowest Detroit pts/poss" },
+  { value: "teamDesc", label: "Highest Detroit pts/poss" },
 ];
 
 export function rankLines(lines: DefenderLine[], sort: RankSort): DefenderLine[] {
@@ -123,7 +123,6 @@ export interface Superlative {
   title: string;
   /** How the title is decided, shown under it. */
   rule: string;
-  tone?: "good" | "bad";
   row: MatchupRow;
   stat: string;
 }
@@ -132,7 +131,6 @@ interface SuperlativeRule {
   id: string;
   title: string;
   rule: string;
-  tone?: "good" | "bad";
   eligible: (r: MatchupRow) => boolean;
   /** Higher wins. Ties go to the defender who guarded Cade more. */
   score: (r: MatchupRow) => number;
@@ -150,7 +148,6 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
     id: "cooked",
     title: "Cooked the most",
     rule: "Most Cade points",
-    tone: "good",
     eligible: () => true,
     score: (r) => r.pts,
     stat: (r) => `${r.pts} pts on ${r.poss.toFixed(1)} poss.`,
@@ -175,7 +172,6 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
     id: "table",
     title: "Set the table",
     rule: `Most assists per poss. · ${RATE_MIN_POSS}+ poss.`,
-    tone: "good",
     eligible: enoughPoss,
     score: (r) => perPoss(r.ast, r),
     stat: (r) => `${r.ast} assists on ${r.poss.toFixed(1)} poss.`,
@@ -183,8 +179,7 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
   {
     id: "line",
     title: "Ethical scoring",
-    rule: `Most FT attempts per poss. · ${RATE_MIN_POSS}+ poss.`,
-    tone: "good",
+    rule: `Most FT attempts per poss. · ${RATE_MIN_POSS}+ poss., 2+ FT attempts`,
     eligible: (r) => enoughPoss(r) && r.fta >= 2,
     score: (r) => perPoss(r.fta, r),
     stat: (r) => `${r.ftm}/${r.fta} FT, ${r.sfl} shooting fouls drawn`,
@@ -192,8 +187,7 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
   {
     id: "hawk",
     title: "Dubious handles",
-    rule: `Most Cade turnovers per poss. · ${RATE_MIN_POSS}+ poss.`,
-    tone: "bad",
+    rule: `Most Cade turnovers per poss. · ${RATE_MIN_POSS}+ poss., 2+ turnovers`,
     eligible: (r) => enoughPoss(r) && r.tov >= 2,
     score: (r) => perPoss(r.tov, r),
     stat: (r) => `${r.tov} turnovers on ${r.poss.toFixed(1)} poss.`,
@@ -202,7 +196,6 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
     id: "feast",
     title: "Detroit feasted",
     rule: `Best Detroit pts/poss · ${RATE_MIN_POSS}+ poss.`,
-    tone: "good",
     eligible: enoughPoss,
     score: detPpp,
     stat: (r) => `${detPpp(r).toFixed(2)} pts/poss (${r.teamPts} on ${r.poss.toFixed(1)})`,
@@ -211,7 +204,6 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
     id: "shutdown",
     title: "Shut it down",
     rule: `Worst Detroit pts/poss · ${RATE_MIN_POSS}+ poss.`,
-    tone: "bad",
     eligible: enoughPoss,
     score: (r) => -detPpp(r),
     stat: (r) => `${detPpp(r).toFixed(2)} pts/poss (${r.teamPts} on ${r.poss.toFixed(1)})`,
@@ -225,7 +217,7 @@ export function superlatives(rows: MatchupRow[]): Superlative[] {
       .filter(rule.eligible)
       .sort((a, b) => rule.score(b) - rule.score(a) || b.poss - a.poss)[0];
     return leader
-      ? [{ id: rule.id, title: rule.title, rule: rule.rule, tone: rule.tone, row: leader, stat: rule.stat(leader) }]
+      ? [{ id: rule.id, title: rule.title, rule: rule.rule, row: leader, stat: rule.stat(leader) }]
       : [];
   });
 }

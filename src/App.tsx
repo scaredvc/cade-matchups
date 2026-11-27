@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MatchupData, MatchupRow } from "./types";
-import { EXTREME_MIN_FGA, EXTREME_MIN_POSS, RANK_SORTS, RATE_MIN_POSS, SHOT_MIX_MIN_FGA, extremes, fmtPct, pct, summarize, type RankSort } from "./stats";
+import { EXTREME_MIN_FGA, EXTREME_MIN_POSS, RANK_SORTS, extremes, fmtPct, pct, summarize, type RankSort } from "./stats";
 import Face from "./Face";
 import RankedList from "./RankedList";
 import TopBars from "./TopBars";
@@ -43,56 +43,51 @@ export default function App() {
   if (load.status === "error") return <main className="shell state">Couldn't load matchup data ({load.message}).</main>;
 
   const { data } = load;
-  const updated = new Date(data.updatedAt).toLocaleString(undefined, {
-    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-  });
+  const updated = new Date(data.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
     <main className="shell">
       <header className="masthead">
         <div className="masthead-text">
-          <p className="kicker">
-            <span className="dot" aria-hidden /> Detroit Pistons · #2 · {data.season} {data.seasonType}
-          </p>
+          <p className="kicker">Detroit Pistons <span aria-hidden> / </span> {data.season} {data.seasonType}</p>
           <h1>
-            Cade <span className="vs">vs.</span> every defender
+            Cade <span className="vs">vs.</span><br />Every defender
           </h1>
-          <p className="lede">
-            Across <b>{season.defenders}</b> defenders NBA.com's tracking has credited with guarding him this season,
-            Cunningham is shooting <b>{fmtPct(pct(season.fgm, season.fga), "%")}</b> (<b>{season.fgm}</b>-for-
-            <b>{season.fga}</b>), with <b>{season.ast}</b> assists against <b>{season.tov}</b> turnovers on these matchups.
-          </p>
+          <p className="lede">How Cade Cunningham scores, passes and turns it over against every defender NBA tracking credits with guarding him.</p>
           <p className="stamp">Stats last changed <time dateTime={data.updatedAt}>{updated}</time></p>
         </div>
         <DancingCade />
       </header>
 
-      <section className="strip reveal" aria-label="Season totals across all defenders">
+      <section className="strip" aria-label="Season totals across all tracked matchups">
+        <Stat label="Detroit pts/poss" value={season.teamPpp.toFixed(2)} sub="All tracked matchups" />
         <Stat label="Defenders tracked" value={String(season.defenders)} />
-        <Stat label="Overall FG%" value={fmtPct(pct(season.fgm, season.fga))} sub={`${season.fgm}-for-${season.fga}`} />
-        <Stat label="3P%" value={fmtPct(pct(season.fg3m, season.fg3a))} sub={`${season.fg3m}-for-${season.fg3a}`} />
+        <Stat label="Field goals" value={fmtPct(pct(season.fgm, season.fga), "%")} sub={`${season.fgm}-for-${season.fga}`} />
+        <Stat label="3-pointers" value={fmtPct(pct(season.fg3m, season.fg3a), "%")} sub={`${season.fg3m}-for-${season.fg3a}`} />
         <Stat label="Cade points" value={String(season.pts)} />
         <Stat label="Assists / turnovers" value={`${season.ast} / ${season.tov}`} />
-        <Stat label="Detroit pts/poss" value={season.teamPpp.toFixed(2)} sub="All tracked matchups" />
       </section>
 
-      <section className="callouts reveal" aria-label="Notable matchups">
-        <Callout tone="bad" label={`Toughest coverage (${EXTREME_MIN_POSS}+ poss., ${EXTREME_MIN_FGA}+ FGA)`} row={ex.toughest} />
-        <Callout tone="good" label={`Favorite target (${EXTREME_MIN_POSS}+ poss., ${EXTREME_MIN_FGA}+ FGA)`} row={ex.favorite} />
-        <Callout label="Most-seen defender" row={ex.mostSeen} possOnly />
-      </section>
+      <nav className="section-index" aria-label="On this page">
+        <a href="#supers-h">Awards</a>
+        <a href="#ranked-h">Rankings</a>
+        <a href="#top-h">Charts</a>
+        <a href="#table-h">Full table</a>
+      </nav>
 
-      <section className="section reveal" aria-labelledby="supers-h">
-        <h2 id="supers-h">Superlatives</h2>
-        <p className="note">
-          One title per category, to the defender who led it. Rates need {RATE_MIN_POSS}+ partial possessions and shot
-          mix needs {SHOT_MIX_MIN_FGA}+ shots, so a single possession can't win a title. "Inside" means 2-pointers: rim
-          attacks and midrange both count, because this data doesn't say where a shot came from or whether it was an iso.
-        </p>
+      <section className="section awards" aria-labelledby="supers-h">
+        <h2 id="supers-h">Matchup awards</h2>
+        <p className="note">Toughest coverage and favorite target use Cade’s field-goal percentage, with at least {EXTREME_MIN_POSS} partial possessions and {EXTREME_MIN_FGA} shots.</p>
+        <div className="callouts">
+          <Callout tone="bad" label="Toughest coverage" row={ex.toughest} />
+          <Callout tone="good" label="Favorite target" row={ex.favorite} />
+          <Callout label="Most-seen defender" row={ex.mostSeen} possOnly />
+        </div>
         <Superlatives rows={rows} />
+        <p className="note award-note">“Inside” means any 2-pointer, including midrange. The tracking data doesn’t identify shot location or isolation plays.</p>
       </section>
 
-      <section className="section reveal" aria-labelledby="ranked-h">
+      <section className="section" aria-labelledby="ranked-h">
         <h2 id="ranked-h">Good plays vs. bad plays</h2>
         <div className="play-key">
           <p><b className="positive">Good plays</b> Made field goals, assists, shooting fouls drawn.</p>
@@ -108,7 +103,7 @@ export default function App() {
         <div className="controls">
           <label className="range">
             <span>
-              Minimum partial possessions guarded: <b>{minPoss}</b>
+              Minimum partial possessions <b>{minPoss}</b>
             </span>
             <input type="range" min={0} max={40} step={1} value={minPoss} onChange={(e) => setMinPoss(+e.target.value)} />
           </label>
@@ -126,33 +121,30 @@ export default function App() {
         <RankedList rows={sampled} teamPpp={season.teamPpp} sort={rankSort} />
       </section>
 
-      <section className="section reveal" aria-labelledby="top-h">
-        <h2 id="top-h">Scored, passed, or turned it over: top 12 matchups by sample size</h2>
-        <p className="note">
-          The defenders who logged the most possessions guarding Cunningham, and what he did against them: points scored,
-          assists (passes that led to a score), and turnovers.
-        </p>
+      <section className="section" aria-labelledby="top-h">
+        <h2 id="top-h">The 12 most frequent matchups</h2>
+        <p className="note">Cade’s points, assists and turnovers against the defenders who guarded him most.</p>
         <TopBars rows={rows} />
       </section>
 
-      <section className="section reveal" aria-labelledby="scatter-h">
-        <h2 id="scatter-h">Volume vs. damage</h2>
+      <section className="section" aria-labelledby="scatter-h">
+        <h2 id="scatter-h">Scoring rate by matchup</h2>
         <p className="note">
           Right means the defender saw Cade more. Up means Cade scored more per possession.{" "}
-          <span style={{ color: "var(--good)" }}>Green</span> dots are above his season rate of{" "}
+          <span className="positive">Green</span> dots are above his season rate of{" "}
           {season.ptsPer100.toFixed(1)} points per 100 partial possessions. Uses the minimum-possessions slider above.
         </p>
         <Scatter rows={sampled} baseline={season.ptsPer100} activeId={activeId} onActive={setActiveId} />
       </section>
 
-      <section className="section reveal" aria-labelledby="table-h">
-        <h2 id="table-h">Every defender, full breakdown</h2>
+      <section className="section" aria-labelledby="table-h">
+        <h2 id="table-h">Full matchup table</h2>
         <div className="controls">
           <label className="search">
             <input
               type="search"
               placeholder="Search defender or team (BOS)…"
-              aria-label="Search defender"
+              aria-label="Search defender or team"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -203,13 +195,13 @@ function Callout({ label, row, tone, possOnly }: { label: string; row: MatchupRo
             <div className="callout-name">{row.defName}</div>
             <div className="callout-stat">
               {possOnly
-                ? `${row.poss.toFixed(1)} partial poss. · ${row.team ?? ""}`
+                ? `${row.poss.toFixed(1)} partial poss.${row.team ? ` · ${row.team}` : ""}`
                 : `${fmtPct(pct(row.fgm, row.fga), "%")} FG (${row.fgm}/${row.fga}) on ${row.poss.toFixed(1)} poss.`}
             </div>
           </div>
         </div>
       ) : (
-        <div className="callout-stat">No {EXTREME_MIN_POSS}+ possession matchup yet</div>
+        <div className="callout-stat">No qualifying matchup yet</div>
       )}
     </div>
   );
