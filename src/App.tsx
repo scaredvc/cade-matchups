@@ -8,6 +8,7 @@ import Scatter from "./Scatter";
 import MatchupTable from "./MatchupTable";
 import DancingCade from "./DancingCade";
 import Superlatives from "./Superlatives";
+import { useTheme } from "./theme";
 
 type Load = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: MatchupData };
 
@@ -21,6 +22,7 @@ export default function App() {
   const [rankSort, setRankSort] = useState<RankSort>("poss");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [theme, toggleTheme] = useTheme();
 
   useEffect(() => {
     fetch(DATA_URL, { cache: "no-cache" })
@@ -60,7 +62,12 @@ export default function App() {
       <header className="masthead">
         <div className="matchup-edition">
           <p className="kicker">Detroit Pistons / {data.season} {data.seasonType}</p>
-          <p className="stamp">Stats last changed <time dateTime={data.updatedAt}>{updated}</time></p>
+          <div className="edition-end">
+            <p className="stamp">Stats last changed <time dateTime={data.updatedAt}>{updated}</time></p>
+            <button type="button" className="theme-toggle" onClick={toggleTheme}>
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
+          </div>
         </div>
         <div className="title-row">
           <div>

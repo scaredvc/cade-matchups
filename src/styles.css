@@ -1,4 +1,25 @@
 :root {
+  --ink: #0f141c;
+  --ink-2: #151c27;
+  --panel: #18202c;
+  --line: #2f3947;
+  --paper: #ece7dc;
+  --muted: #9aa3b1;
+  --stone: #c4c9d2;
+  --court: #8fb1ff;
+  --brand: var(--court);
+  --good: var(--court);
+  --bad: #f27b7c;
+  --soft-blue: #1d2a43;
+  --dot: #6b88c2;
+  --hairline: rgb(255 255 255 / 0.12);
+  --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --body: "Instrument Sans", system-ui, sans-serif;
+  --mono: "Spline Sans Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
   --ink: #f4f0e7;
   --ink-2: #ece7dc;
   --panel: #f0ebe1;
@@ -7,13 +28,10 @@
   --muted: #555b69;
   --stone: #3e4658;
   --court: #173e9d;
-  --brand: var(--court);
-  --good: var(--court);
   --bad: #993e3d;
   --soft-blue: #e4e9f3;
-  --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
-  --body: "Instrument Sans", system-ui, sans-serif;
-  --mono: "Spline Sans Mono", ui-monospace, monospace;
+  --dot: #536fa4;
+  --hairline: rgb(0 0 0 / 0.1);
   color-scheme: light;
 }
 
@@ -30,6 +48,22 @@ a { color: var(--court); text-underline-offset: 0.23em; }
 .kicker, .stamp { margin: 0; font: 500 11px/1.45 var(--mono); }
 .kicker { color: var(--court); text-transform: uppercase; letter-spacing: 0.065em; }
 .stamp { color: var(--muted); text-align: right; }
+.edition-end { display: flex; align-items: center; gap: 14px; }
+.theme-toggle {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--paper);
+  font: 500 11px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.theme-toggle:hover { border-color: var(--court); color: var(--court); }
+@media (pointer: coarse) { .theme-toggle { min-height: 44px; } }
 .title-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; padding: 18px 0 14px; }
 h1 { margin: 0; font: 900 clamp(45px, 6.75vw, 96px)/0.91 var(--display); text-transform: uppercase; letter-spacing: -0.018em; }
 .vs { color: var(--court); }
@@ -72,7 +106,7 @@ h1 { margin: 0; font: 900 clamp(45px, 6.75vw, 96px)/0.91 var(--display); text-tr
 .stat-value { font: 800 37px/1 var(--display); font-variant-numeric: tabular-nums; }
 .stat-sub { font: 11px/1.4 var(--mono); color: var(--muted); }
 .mascot { margin: 0; display: grid; grid-template-columns: 57px 1fr; align-items: center; gap: 8px; }
-.mascot img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; outline: 1px solid rgb(0 0 0 / 0.1); outline-offset: -1px; }
+.mascot img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; outline: 1px solid var(--hairline); outline-offset: -1px; }
 .mascot figcaption { font: 10px/1.35 var(--mono); color: var(--muted); }
 
 .awards-layout { display: grid; grid-template-columns: minmax(225px, 0.9fr) minmax(0, 2.3fr); gap: clamp(18px, 3.5vw, 40px); margin-top: 15px; }
@@ -196,7 +230,7 @@ select { margin-left: auto; cursor: pointer; }
 .baseline { stroke: var(--stone); stroke-width: 1.5; stroke-dasharray: 6 5; opacity: 0.8; }
 .pt { cursor: pointer; }
 .pt-target { fill: transparent; }
-.pt-dot { fill: #536fa4; stroke: var(--ink); stroke-width: 1px; pointer-events: none; }
+.pt-dot { fill: var(--dot); stroke: var(--ink); stroke-width: 1px; pointer-events: none; }
 .pt:hover .pt-dot, .pt:focus-visible .pt-dot { fill: var(--court); stroke: var(--court); stroke-width: 2px; }
 .pt.active .pt-dot { fill: var(--bad); stroke: var(--bad); }
 .pt-label { fill: var(--bad); font: 700 13px var(--body); pointer-events: none; paint-order: stroke; stroke: var(--ink); stroke-width: 4px; }
@@ -286,6 +320,9 @@ td.rate.hot { color: var(--good); }
 
 @media (max-width: 500px) {
   .kicker, .stamp { font-size: 10px; }
+  .matchup-edition { flex-wrap: wrap; row-gap: 4px; }
+  .edition-end { width: 100%; justify-content: space-between; }
+  .stamp { text-align: left; }
   h1 { font-size: clamp(37px, 11.5vw, 57px); }
   .lede { font-size: 13px; }
   .season-rate span, .season-rate small { font-size: 9px; }
