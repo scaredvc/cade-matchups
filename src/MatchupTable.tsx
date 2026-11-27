@@ -5,8 +5,8 @@ import { fmtPct, fmtTime, pct, per100, sortValue, type SortKey } from "./stats";
 interface Props {
   rows: MatchupRow[];
   baseline: number;
-  activeId: number | null;
-  onActive: (id: number | null) => void;
+  selectedId: number | null;
+  onSelect: (id: number) => void;
 }
 
 const COLUMNS: { key: SortKey; label: string; title: string; numeric: boolean }[] = [
@@ -24,7 +24,7 @@ const COLUMNS: { key: SortKey; label: string; title: string; numeric: boolean }[
   { key: "blk", label: "Blk", title: "Cade's shots blocked by this defender", numeric: true },
 ];
 
-export default function MatchupTable({ rows, baseline, activeId, onActive }: Props) {
+export default function MatchupTable({ rows, baseline, selectedId, onSelect }: Props) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "poss", desc: true });
 
   const sorted = useMemo(() => {
@@ -72,14 +72,9 @@ export default function MatchupTable({ rows, baseline, activeId, onActive }: Pro
           {sorted.map((r) => {
             const rate = per100(r.pts, r.poss);
             return (
-              <tr
-                key={r.defId}
-                className={r.defId === activeId ? "active" : undefined}
-                onMouseEnter={() => onActive(r.defId)}
-                onMouseLeave={() => onActive(null)}
-              >
+              <tr key={r.defId} className={r.defId === selectedId ? "active" : undefined}>
                 <td className="name">
-                  {r.defName}
+                  <a href="#map-h" onClick={() => onSelect(r.defId)} title="Show on the matchup map">{r.defName}</a>
                   <span className="team">{r.team ?? ""}</span>
                 </td>
                 <td className="num">{r.gp}</td>
