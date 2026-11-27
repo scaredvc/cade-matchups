@@ -18,7 +18,7 @@ export default function DancingCade() {
         />
       </picture>
       <figcaption>
-        Art by 2Tall ·{" "}
+        2Tall Animation ·{" "}
         <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
           GIPHY
         </a>

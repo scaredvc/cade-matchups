@@ -77,14 +77,21 @@ export default function App() {
 
       <section className="section awards" aria-labelledby="supers-h">
         <h2 id="supers-h">Matchup awards</h2>
-        <p className="note">Toughest coverage and favorite target use Cade’s field-goal percentage, with at least {EXTREME_MIN_POSS} partial possessions and {EXTREME_MIN_FGA} shots.</p>
-        <div className="callouts">
-          <Callout tone="bad" label="Toughest coverage" row={ex.toughest} />
-          <Callout tone="good" label="Favorite target" row={ex.favorite} />
-          <Callout label="Most-seen defender" row={ex.mostSeen} possOnly />
+        <div className="awards-layout">
+          <div className="featured">
+            <h3 className="featured-label">Featured matchups</h3>
+            <div className="callouts">
+              <Callout tone="bad" label="Toughest coverage" row={ex.toughest} />
+              <Callout tone="good" label="Favorite target" row={ex.favorite} />
+              <Callout label="Most-seen defender" row={ex.mostSeen} possOnly />
+            </div>
+            <p className="note feature-note">Toughest and favorite are based on Cade’s FG% with at least {EXTREME_MIN_POSS} partial possessions and {EXTREME_MIN_FGA} attempts.</p>
+          </div>
+          <div className="award-board">
+            <Superlatives rows={rows} />
+            <p className="note award-note">“Inside” includes all 2-pointers, even midrange. These data don’t identify shot location or isolation plays.</p>
+          </div>
         </div>
-        <Superlatives rows={rows} />
-        <p className="note award-note">“Inside” means any 2-pointer, including midrange. The tracking data doesn’t identify shot location or isolation plays.</p>
       </section>
 
       <section className="section" aria-labelledby="ranked-h">
