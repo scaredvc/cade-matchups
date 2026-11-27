@@ -51,6 +51,8 @@ assert.equal(byId.deep, 11);
 assert.equal(byId.table, 11);
 assert.equal(byId.line, 10, "defender 12 has the FT rate but only 4 poss.");
 assert.equal(byId.hawk, 11);
+assert.equal(sup.find((s) => s.id === "line")?.title, "Ethical scoring");
+assert.equal(sup.find((s) => s.id === "hawk")?.title, "Dubious handles");
 assert.equal(byId.feast, 10, "1.00 pts/poss beats 0.50");
 assert.equal(byId.shutdown, 11);
 assert.equal(sup.find((s) => s.id === "inside")?.stat, "9 of 9 shots were 2s (9/9 made)");

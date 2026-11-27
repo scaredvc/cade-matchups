@@ -12,8 +12,6 @@ import Superlatives from "./Superlatives";
 type Load = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; data: MatchupData };
 
 const DATA_URL = `${import.meta.env.BASE_URL}data/cade-matchups.json`;
-/** Every data refresh is a commit to this file, so its history is the update log. */
-const HISTORY_URL = "https://github.com/scaredvc/cade-matchups/commits/main/public/data/cade-matchups.json";
 
 export default function App() {
   const [load, setLoad] = useState<Load>({ status: "loading" });
@@ -64,12 +62,7 @@ export default function App() {
             Cunningham is shooting <b>{fmtPct(pct(season.fgm, season.fga), "%")}</b> (<b>{season.fgm}</b>-for-
             <b>{season.fga}</b>), with <b>{season.ast}</b> assists against <b>{season.tov}</b> turnovers on these matchups.
           </p>
-          <p className="stamp">
-            Stats last changed <time dateTime={data.updatedAt}>{updated}</time> · checked daily at 9 AM PT ·{" "}
-            <a href={HISTORY_URL} target="_blank" rel="noopener noreferrer">
-              update history
-            </a>
-          </p>
+          <p className="stamp">Stats last changed <time dateTime={data.updatedAt}>{updated}</time></p>
         </div>
         <DancingCade />
       </header>
@@ -78,9 +71,9 @@ export default function App() {
         <Stat label="Defenders tracked" value={String(season.defenders)} />
         <Stat label="Overall FG%" value={fmtPct(pct(season.fgm, season.fga))} sub={`${season.fgm}-for-${season.fga}`} />
         <Stat label="3P%" value={fmtPct(pct(season.fg3m, season.fg3a))} sub={`${season.fg3m}-for-${season.fg3a}`} />
-        <Stat label="Points scored" value={String(season.pts)} />
-        <Stat label="Assists (passed)" value={String(season.ast)} />
-        <Stat label="Turnovers" value={String(season.tov)} />
+        <Stat label="Cade points" value={String(season.pts)} />
+        <Stat label="Assists / turnovers" value={`${season.ast} / ${season.tov}`} />
+        <Stat label="Detroit pts/poss" value={season.teamPpp.toFixed(2)} sub="All tracked matchups" />
       </section>
 
       <section className="callouts reveal" aria-label="Notable matchups">
@@ -100,18 +93,17 @@ export default function App() {
       </section>
 
       <section className="section reveal" aria-labelledby="ranked-h">
-        <h2 id="ranked-h">Who disrupted Cade, and who didn't</h2>
+        <h2 id="ranked-h">Good plays vs. bad plays</h2>
+        <div className="play-key">
+          <p><b className="positive">Good plays</b> Made field goals, assists, shooting fouls drawn.</p>
+          <p><b className="negative">Bad plays</b> Missed field goals, turnovers.</p>
+        </div>
         <p className="note">
-          <b>Bad plays vs. good plays</b> counts what Cade did on possessions each defender guarded him. Good plays
-          (green, right) are made shots, assists and shooting fouls drawn. Bad plays (red, left) are missed shots and
-          turnovers. The number is good minus bad: a defender in the red really bothered him, while a big green number
-          means Cade won the matchup even if he barely shot.
+          Net is good minus bad. These are event counts, not grades on individual possessions or proof that a defender caused the result.
         </p>
         <p className="note">
-          <b>Detroit pts/poss</b> is the whole team's points per possession while that defender was on Cade: his scoring,
-          his passing and everything his gravity opened up. Across all his matchups it's <b>{season.teamPpp.toFixed(2)}</b>.
-          Above that (green number and ring), Detroit's offense won the matchup; below it (red), the defender did. This
-          only covers Detroit's offense.
+          <b>Detroit average: {season.teamPpp.toFixed(2)} pts/poss.</b> Total Detroit points divided by total partial possessions
+          across all tracked Cade matchups. Green is at or above that mark; red is below. Filters don’t change the average.
         </p>
         <div className="controls">
           <label className="range">

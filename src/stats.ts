@@ -182,8 +182,8 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
   },
   {
     id: "line",
-    title: "Got to the line",
-    rule: `Most free throws per poss. · ${RATE_MIN_POSS}+ poss.`,
+    title: "Ethical scoring",
+    rule: `Most FT attempts per poss. · ${RATE_MIN_POSS}+ poss.`,
     tone: "good",
     eligible: (r) => enoughPoss(r) && r.fta >= 2,
     score: (r) => perPoss(r.fta, r),
@@ -191,7 +191,7 @@ const SUPERLATIVE_RULES: SuperlativeRule[] = [
   },
   {
     id: "hawk",
-    title: "Ball hawk",
+    title: "Dubious handles",
     rule: `Most Cade turnovers per poss. · ${RATE_MIN_POSS}+ poss.`,
     tone: "bad",
     eligible: (r) => enoughPoss(r) && r.tov >= 2,
