@@ -79,7 +79,6 @@ export default function Scatter({ rows, baseline, selectedId, onSelect }: Props)
                 }}
                 aria-label={`${r.defName}: ${r.poss.toFixed(1)} partial possessions, ${rate.toFixed(1)} points per 100`}
               >
-                <title>{r.defName}</title>
                 <circle className="pt-target" cx={cx} cy={cy} r={10} />
                 <circle className="pt-dot" cx={cx} cy={cy} r={isSelected ? 6 : 4} />
                 {isSelected && (

@@ -228,8 +228,9 @@ select { margin-left: auto; cursor: pointer; }
 .tick, .axis { fill: var(--muted); font: 11px var(--mono); }
 .bar-name { fill: var(--paper); font: 500 13px var(--body); }
 .baseline { stroke: var(--stone); stroke-width: 1.5; stroke-dasharray: 6 5; opacity: 0.8; }
-.pt { cursor: pointer; }
+.pt { cursor: pointer; outline: none; }
 .pt-target { fill: transparent; }
+.pt:focus-visible .pt-target { stroke: var(--court); stroke-width: 2px; }
 .pt-dot { fill: var(--dot); stroke: var(--ink); stroke-width: 1px; pointer-events: none; }
 .pt:hover .pt-dot, .pt:focus-visible .pt-dot { fill: var(--court); stroke: var(--court); stroke-width: 2px; }
 .pt.active .pt-dot { fill: var(--bad); stroke: var(--bad); }
