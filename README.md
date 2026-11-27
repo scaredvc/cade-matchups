@@ -2,9 +2,9 @@
 
 How Cade Cunningham scores against every defender NBA tracking credited with guarding him this season.
 
-**Live:** https://scaredvc.github.io/cade-matchups/
+**Live:** https://cade-matchups.vercel.app (Vercel) · https://scaredvc.github.io/cade-matchups/ (GitHub Pages)
 
-Static Vite + React + TypeScript site. The page reads `public/data/cade-matchups.json` and `public/headshots/`, which a Python script refreshes from NBA.com's matchup data (`LeagueSeasonMatchups`) via [`nba_api`](https://github.com/swar/nba_api). Every push to `main` rebuilds and deploys to GitHub Pages.
+Static Vite + React + TypeScript site. The page reads `public/data/cade-matchups.json` and `public/headshots/`, which a Python script refreshes from NBA.com's matchup data (`LeagueSeasonMatchups`) via [`nba_api`](https://github.com/swar/nba_api). Every push to `main` deploys to both hosts: Vercel through its GitHub integration (`vercel.json`), and GitHub Pages through `.github/workflows/deploy.yml`, which builds with `GITHUB_PAGES=true` so assets resolve under `/cade-matchups/`.
 
 ## How the data gets here
 
@@ -13,6 +13,7 @@ Task Scheduler (this PC, daily)
   └─ scripts/daily_update.py
        ├─ uv run scripts/fetch_matchups.py   → public/data/cade-matchups.json, public/headshots/*.png
        └─ git commit + push (only if the data changed)
+            ├─ Vercel: test, build, deploy (cade-matchups.vercel.app)
             └─ GitHub Actions: test, build, deploy to Pages
 ```
 
